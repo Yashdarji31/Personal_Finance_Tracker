@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Ledger{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block topbar_actions %}<a href="{% url "transaction_add" %}" class="btn-accent"><i class="bi bi-plus"></i> Add Transaction</a>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3 fade-up fade-up-1"><div class="stat-card income"><div class="stat-label">Monthly Income</div><div class="stat-value income">Rs. {{ monthly_income|floatformat:0 }}</div><div class="stat-sub">{{ today|date:"F Y" }}</div><i class="bi bi-arrow-down-circle stat-icon"></i></div></div>
+  <div class="col-md-3 fade-up fade-up-2"><div class="stat-card expense"><div class="stat-label">Monthly Expenses</div><div class="stat-value expense">Rs. {{ monthly_expense|floatformat:0 }}</div><div class="stat-sub">{{ today|date:"F Y" }}</div><i class="bi bi-arrow-up-circle stat-icon"></i></div></div>
+  <div class="col-md-3 fade-up fade-up-3"><div class="stat-card balance"><div class="stat-label">Net Balance</div><div class="stat-value balance">Rs. {{ net_balance|floatformat:0 }}</div><div class="stat-sub">Income - Expenses</div><i class="bi bi-wallet2 stat-icon"></i></div></div>
+  <div class="col-md-3 fade-up fade-up-4"><div class="stat-card total"><div class="stat-label">Total Income</div><div class="stat-value total">Rs. {{ total_income|floatformat:0 }}</div><div class="stat-sub">All time</div><i class="bi bi-graph-up-arrow stat-icon"></i></div></div>
+</div>
+{% if budget_alerts %}{% for alert in budget_alerts %}<div class="alert alert-warning d-flex align-items-center gap-2 mb-3"><i class="bi bi-exclamation-triangle-fill"></i><span><strong>{{ alert.budget.category }}</strong> budget is at {{ alert.percentage }}%</span></div>{% endfor %}{% endif %}
+<div class="row g-3 mb-4">
+  <div class="col-lg-7 fade-up fade-up-2"><div class="card h-100"><div class="card-header">6-Month Income vs Expense</div><div class="card-body"><canvas id="trendChart" height="220"></canvas></div></div></div>
+  <div class="col-lg-5 fade-up fade-up-3"><div class="card h-100"><div class="card-header">Spending by Category</div><div class="card-body d-flex align-items-center justify-content-center"><canvas id="categoryChart" height="220"></canvas></div></div></div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-7 fade-up"><div class="card"><div class="card-header d-flex justify-content-between align-items-center">Recent Transactions <a href="{% url "transaction_list" %}" class="btn-ghost" style="font-size:11px;">View All</a></div>
+  <div class="card-body p-0">{% if recent_transactions %}<table class="data-table"><thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Amount</th></tr></thead><tbody>
+  {% for txn in recent_transactions %}<tr><td><div style="font-weight:500;">{{ txn.title }}</div></td><td>{% if txn.category %}{{ txn.category.icon }} {{ txn.category.name }}{% else %}-{% endif %}</td><td><span class="mono" style="font-size:12px;color:var(--muted);">{{ txn.date|date:"d M" }}</span></td><td>{% if txn.transaction_type == "income" %}<span class="amount-income">+Rs.{{ txn.amount|floatformat:0 }}</span>{% else %}<span class="amount-expense">-Rs.{{ txn.amount|floatformat:0 }}</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table>{% else %}<div style="padding:40px;text-align:center;color:var(--muted);"><i class="bi bi-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>No transactions yet. <a href="{% url "transaction_add" %}" style="color:var(--accent);">Add one!</a></div>{% endif %}</div></div></div>
+  <div class="col-lg-5 fade-up fade-up-2"><div class="card"><div class="card-header d-flex justify-content-between align-items-center">Budget Goals <a href="{% url "budget_list" %}" class="btn-ghost" style="font-size:11px;">Manage</a></div>
+  <div class="card-body">{% if budget_alerts %}{% for alert in budget_alerts %}<div class="mb-3"><div class="d-flex justify-content-between mb-1"><span>{{ alert.budget.category }}</span><span class="mono" style="font-size:12px;">{{ alert.percentage }}%</span></div><div class="progress"><div class="progress-bar" style="width:{{ alert.percentage }}%;background:{% if alert.percentage >= 100 %}var(--expense){% elif alert.percentage >= 80 %}#fbbf24{% else %}var(--income){% endif %};"></div></div></div>{% endfor %}
+  {% else %}<div style="text-align:center;color:var(--muted);padding:30px 0;"><i class="bi bi-bullseye" style="font-size:28px;display:block;margin-bottom:8px;"></i><div>No budgets this month.</div><a href="{% url "budget_add" %}" style="color:var(--accent);">Create a budget</a></div>{% endif %}</div></div></div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+const trendData={{trend_data|safe}};const categoryData={{expense_by_category|safe}};
+Chart.defaults.color="#6b7280";Chart.defaults.borderColor="rgba(255,255,255,0.06)";Chart.defaults.font.family="DM Sans,sans-serif";
+new Chart(document.getElementById("trendChart"),{type:"bar",data:{labels:trendData.map(d=>d.month),datasets:[{label:"Income",data:trendData.map(d=>d.income),backgroundColor:"rgba(52,211,153,0.25)",borderColor:"#34d399",borderWidth:2,borderRadius:5},{label:"Expenses",data:trendData.map(d=>d.expense),backgroundColor:"rgba(248,113,113,0.25)",borderColor:"#f87171",borderWidth:2,borderRadius:5}]},options:{responsive:true,plugins:{legend:{labels:{boxWidth:12,padding:20}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>"Rs."+v.toLocaleString()},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+if(categoryData.length>0){new Chart(document.getElementById("categoryChart"),{type:"doughnut",data:{labels:categoryData.map(d=>d.icon+" "+d.name),datasets:[{data:categoryData.map(d=>d.total),backgroundColor:categoryData.map(d=>d.color+"cc"),borderColor:categoryData.map(d=>d.color),borderWidth:1,hoverOffset:8}]},options:{cutout:"68%",plugins:{legend:{position:"bottom",labels:{boxWidth:10,padding:12,font:{size:11}}},tooltip:{callbacks:{label:ctx=>" Rs."+ctx.raw.toLocaleString()}}}}})}
+</script>{% endblock %}

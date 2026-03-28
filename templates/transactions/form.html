@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Transaction - Ledger{% endblock %}
+{% block page_title %}{{ action }} Transaction{% endblock %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-6"><div class="card fade-up"><div class="card-header">Transaction Details</div><div class="card-body">
+<form method="post">{% csrf_token %}{% for field in form %}<div class="mb-3"><label class="form-label">{{ field.label }}</label>{{ field }}{% if field.errors %}<div style="color:var(--expense);font-size:12px;margin-top:4px;">{{ field.errors.0 }}</div>{% endif %}</div>{% endfor %}
+<div class="d-flex gap-2 mt-4"><button type="submit" class="btn-accent">{{ action }} Transaction</button><a href="{% url "transaction_list" %}" class="btn-ghost">Cancel</a></div>
+</form></div></div></div></div>{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Transactions - Ledger{% endblock %}
+{% block page_title %}Transactions{% endblock %}
+{% block topbar_actions %}<a href="{% url "transaction_add" %}" class="btn-accent"><i class="bi bi-plus"></i> Add</a>{% endblock %}
+{% block content %}
+<div class="card mb-4 fade-up"><div class="card-body"><form method="get" class="row g-2 align-items-end">
+<div class="col-md-3"><label class="form-label">Search</label><input type="text" name="search" class="form-control" placeholder="Title..." value="{{ request.GET.search }}"></div>
+<div class="col-md-2"><label class="form-label">Type</label><select name="type" class="form-control"><option value="">All</option><option value="income" {% if request.GET.type == "income" %}selected{% endif %}>Income</option><option value="expense" {% if request.GET.type == "expense" %}selected{% endif %}>Expense</option></select></div>
+<div class="col-md-2"><label class="form-label">Category</label><select name="category" class="form-control"><option value="">All</option>{% for cat in categories %}<option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat }}</option>{% endfor %}</select></div>
+<div class="col-md-2"><label class="form-label">From</label><input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}"></div>
+<div class="col-md-2"><label class="form-label">To</label><input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}"></div>
+<div class="col-md-1"><button type="submit" class="btn-accent w-100" style="padding:10px;">Go</button></div>
+</form></div></div>
+<div class="card fade-up fade-up-2"><div class="card-body p-0">
+{% if transactions %}<table class="data-table"><thead><tr><th>Title</th><th>Type</th><th>Category</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead><tbody>
+{% for txn in transactions %}<tr>
+<td><div style="font-weight:500;">{{ txn.title }}</div>{% if txn.notes %}<div style="font-size:11px;color:var(--muted);">{{ txn.notes|truncatechars:50 }}</div>{% endif %}</td>
+<td>{% if txn.transaction_type == "income" %}<span class="badge-income">Income</span>{% else %}<span class="badge-expense">Expense</span>{% endif %}</td>
+<td>{% if txn.category %}{{ txn.category.icon }} {{ txn.category.name }}{% else %}-{% endif %}</td>
+<td><span class="mono" style="font-size:12px;color:var(--muted);">{{ txn.date|date:"d M Y" }}</span></td>
+<td>{% if txn.transaction_type == "income" %}<span class="amount-income">+Rs.{{ txn.amount|floatformat:2 }}</span>{% else %}<span class="amount-expense">-Rs.{{ txn.amount|floatformat:2 }}</span>{% endif %}</td>
+<td><div class="d-flex gap-2"><a href="{% url "transaction_edit" txn.pk %}" class="btn-ghost" style="padding:5px 12px;font-size:11px;"><i class="bi bi-pencil"></i></a><a href="{% url "transaction_delete" txn.pk %}" class="btn-danger-ghost"><i class="bi bi-trash"></i></a></div></td>
+</tr>{% endfor %}</tbody></table>
+{% if transactions.has_other_pages %}<div class="d-flex justify-content-center gap-2 p-3">{% if transactions.has_previous %}<a href="?page={{ transactions.previous_page_number }}" class="btn-ghost">Prev</a>{% endif %}<span style="padding:8px 14px;color:var(--muted);">{{ transactions.number }} / {{ transactions.paginator.num_pages }}</span>{% if transactions.has_next %}<a href="?page={{ transactions.next_page_number }}" class="btn-ghost">Next</a>{% endif %}</div>{% endif %}
+{% else %}<div style="padding:60px;text-align:center;color:var(--muted);"><i class="bi bi-inbox" style="font-size:40px;display:block;margin-bottom:12px;"></i>No transactions. <a href="{% url "transaction_add" %}" style="color:var(--accent);">Add one</a></div>{% endif %}
+</div></div>{% endblock %}

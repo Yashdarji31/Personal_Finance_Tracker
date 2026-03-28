@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Budgets - Ledger{% endblock %}
+{% block page_title %}Budget Goals{% endblock %}
+{% block topbar_actions %}<a href="{% url "budget_add" %}" class="btn-accent"><i class="bi bi-plus"></i> New Budget</a>{% endblock %}
+{% block content %}
+<div class="card mb-4 fade-up"><div class="card-body"><form method="get" class="d-flex gap-3 align-items-end">
+<div><label class="form-label">Month</label><select name="month" class="form-control" style="width:100px;">{% for m in months %}<option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>{% endfor %}</select></div>
+<div><label class="form-label">Year</label><select name="year" class="form-control" style="width:100px;">{% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select></div>
+<button type="submit" class="btn-ghost">Apply</button></form></div></div>
+{% if budget_data %}<div class="row g-3">{% for item in budget_data %}<div class="col-md-6 col-lg-4 fade-up"><div class="card h-100"><div class="card-body">
+<div class="d-flex justify-content-between align-items-start mb-3"><div><div style="font-size:18px;">{{ item.budget.category.icon }}</div><div style="font-weight:600;">{{ item.budget.category.name }}</div></div>
+<div class="d-flex gap-2"><a href="{% url "budget_edit" item.budget.pk %}" class="btn-ghost" style="padding:5px 10px;font-size:11px;"><i class="bi bi-pencil"></i></a><a href="{% url "budget_delete" item.budget.pk %}" class="btn-danger-ghost" style="padding:5px 10px;"><i class="bi bi-trash"></i></a></div></div>
+<div class="d-flex justify-content-between mb-1"><span class="mono" style="font-size:12px;color:var(--muted);">Spent</span><span class="mono" style="font-size:12px;color:{% if item.percentage >= 100 %}var(--expense){% elif item.percentage >= 80 %}#fbbf24{% else %}var(--income){% endif %};">{{ item.percentage }}%</span></div>
+<div class="progress mb-3"><div class="progress-bar" style="width:{{ item.percentage }}%;background:{% if item.percentage >= 100 %}var(--expense){% elif item.percentage >= 80 %}#fbbf24{% else %}var(--income){% endif %};"></div></div>
+<div class="d-flex justify-content-between"><div><div style="font-size:10px;color:var(--muted);">SPENT</div><div class="mono amount-expense">Rs.{{ item.spent|floatformat:0 }}</div></div><div style="text-align:right;"><div style="font-size:10px;color:var(--muted);">BUDGET</div><div class="mono">Rs.{{ item.budget.amount|floatformat:0 }}</div></div></div>
+{% if item.remaining > 0 %}<div style="margin-top:10px;font-size:11px;color:var(--income);"><i class="bi bi-check-circle-fill"></i> Rs.{{ item.remaining|floatformat:0 }} remaining</div>
+{% else %}<div style="margin-top:10px;font-size:11px;color:var(--expense);"><i class="bi bi-x-circle-fill"></i> Over budget!</div>{% endif %}
+</div></div></div>{% endfor %}</div>
+{% else %}<div class="card fade-up"><div class="card-body" style="text-align:center;padding:60px;"><i class="bi bi-bullseye" style="font-size:40px;color:var(--muted);display:block;margin-bottom:12px;"></i><div style="color:var(--muted);">No budgets for this period.</div><a href="{% url "budget_add" %}" style="color:var(--accent);margin-top:8px;display:inline-block;">Create your first budget</a></div></div>{% endif %}
+{% endblock %}
