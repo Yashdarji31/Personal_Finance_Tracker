@@ -36,3 +36,9 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/analytics/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
+
+import dj_database_url, os
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
+if os.environ.get('ALLOWED_HOSTS'):
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
